@@ -84,6 +84,10 @@ def softmax_loss_vectorized(W, X, y, reg):
     
     loss /= num_train
     loss += 0.5 * reg * np.sum(W * W)
+    
+    ind = np.zeros_like(score)
+    ind[np.arange(num_train), y] = 1
+    dW = X.T.dot(np.exp(score) / np.sum(np.exp(score), axis = 1, keepdims = True) - ind)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
