@@ -79,8 +79,13 @@ class TwoLayerNet(object):
         # shape (N, C).                                                             #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        
+        scores = X.dot(W1) + b1
+        h1 = np.maximum(0, scores)
+        scores = h1.dot(W2) + b2
+#         scores = X.dot(W1) + b1
+#         R1 = np.maximum(scores, 0)
+#         scores = R1.dot(W2) + b2
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -97,8 +102,13 @@ class TwoLayerNet(object):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        exp_scores = np.exp(scores)
+        row_sum = exp_scores.sum(axis = 1)[:, np.newaxis]
+        exp_scores /= row_sum
+        
+        data_loss = -1.0 / N * np.log(exp_scores[np.arange(N), y]).sum()
+        reg_loss = 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+        loss = data_loss + reg_loss
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -110,8 +120,19 @@ class TwoLayerNet(object):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        delta3 = np.zeros_like(exp_scores)
+        delta3[np.arange(N), y] -= 1
+        delta3 += exp_scores
+        grads['W2'] = h1.T.dot(delta3) / N + reg * W2
+        grads['b2'] = np.ones(N).dot(delta3)/N
+        
+        da2_dz2 = np.zeros_like(h1)
+        da2_dz2[h1 > 0] = 1
 
-        pass
+        delta2 = delta3.dot(W2.T) * da2_dz2
+        grads['W1'] = X.T.dot(delta2)/N + reg * W1
+        grads['b1'] = np.ones(N).dot(delta2)/N
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -156,7 +177,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            idx = np.random.choice(num_train, batch_size)
+            X_batch = X[idx]
+            y_batch = y[idx]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -172,7 +195,10 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            self.params['W1'] += -learning_rate * grads['W1']
+            self.params['W2'] += -learning_rate * grads['W2']
+            self.params['b1'] += -learning_rate * grads['b1']
+            self.params['b2'] += -learning_rate * grads['b2']
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -218,7 +244,11 @@ class TwoLayerNet(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+#         h1 = np.maximum(0, (np.dot(X, self.params['W1']) + self.params['b1']))
+#         scores = np.dot(h1, self.params['W2']) + self.params['b2']
+#         y_pred = np.argmax(scores, axis = 1)
+        scores = self.loss(X)
+        y_pred = np.argmax(scores,axis = 1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
