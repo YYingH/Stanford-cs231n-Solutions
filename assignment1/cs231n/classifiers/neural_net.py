@@ -80,12 +80,9 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        scores = X.dot(W1) + b1
-        h1 = np.maximum(0, scores)
+        h1 = X.dot(W1) + b1
+        h1 = np.maximum(0, h1)
         scores = h1.dot(W2) + b2
-#         scores = X.dot(W1) + b1
-#         R1 = np.maximum(scores, 0)
-#         scores = R1.dot(W2) + b2
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -102,13 +99,13 @@ class TwoLayerNet(object):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        exp_scores = np.exp(scores)
-        row_sum = exp_scores.sum(axis = 1)[:, np.newaxis]
-        exp_scores /= row_sum
+
+        exp_score = np.exp(scores[np.arange(N), y])
+        loss = -1.0 * np.log(exp_score / np.sum(np.exp(scores), axis = 1))
+        loss = np.sum(loss) / N
+        loss += reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
         
-        data_loss = -1.0 / N * np.log(exp_scores[np.arange(N), y]).sum()
-        reg_loss = 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
-        loss = data_loss + reg_loss
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -120,19 +117,22 @@ class TwoLayerNet(object):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        delta3 = np.zeros_like(exp_scores)
-        delta3[np.arange(N), y] -= 1
-        delta3 += exp_scores
-        grads['W2'] = h1.T.dot(delta3) / N + reg * W2
-        grads['b2'] = np.ones(N).dot(delta3)/N
         
-        da2_dz2 = np.zeros_like(h1)
-        da2_dz2[h1 > 0] = 1
+        probs = np.exp(scores)/np.sum(np.exp(scores), keepdims=True, axis=1)
+        dscores = probs
+        dscores[range(len(y)), y] -= 1
+        dscores /= len(y)
 
-        delta2 = delta3.dot(W2.T) * da2_dz2
-        grads['W1'] = X.T.dot(delta2)/N + reg * W1
-        grads['b1'] = np.ones(N).dot(delta2)/N
+        grads['W2'] = np.dot(h1.T, dscores)
+        grads['W2'] += reg*W2
+        grads['b2'] = np.sum(dscores, axis=0)
+
+        dl1 = np.dot(dscores, W2.T)
+        dl1[h1 <= 0] = 0
         
+        grads['W1'] = np.dot(X.T, dl1)
+        grads['W1'] += reg*W1
+        grads['b1'] = np.sum(dl1, axis=0)    
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
