@@ -113,14 +113,15 @@ class TwoLayerNet(object):
         loss, dout = softmax_loss(scores, y)
         loss += 0.5 * self.reg * (np.sum(self.params['W1']**2) + np.sum(self.params['W2']**2))
         
-        _, dw2, db2 = affine_backward(dout, out_cache)
-        _, dw1, db1 = affine_relu_backward(h1_out, h1_cache)
+        dout2, dw2, db2 = affine_backward(dout, out_cache)
+        dout1, dw1, db1 = affine_relu_backward(dout2, h1_cache)
         
         dw1 += self.reg * self.params['W1']
         dw2 += self.reg * self.params['W2']
         
         grads['W1'],grads['b1'] = dw1,db1
         grads['W2'],grads['b2'] = dw2,db2
+
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
