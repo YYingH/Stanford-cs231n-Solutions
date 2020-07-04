@@ -49,7 +49,10 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        self.params['W1'] = (np.random.randn(input_dim * hidden_dim) * weight_scale).reshape(input_dim, hidden_dim)
+        self.params['b1'] = np.zeros((1, hidden_dim))
+        self.params['W2'] = (np.random.randn(hidden_dim * num_classes) * weight_scale).reshape(hidden_dim, num_classes)
+        self.params['b2'] = np.zeros((1, num_classes))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -82,8 +85,9 @@ class TwoLayerNet(object):
         # class scores for X and storing them in the scores variable.              #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        h1_out, h1_cache = affine_relu_forward(X, self.params['W1'], self.params['b1'])
+        scores, out_cache = affine_forward(h1_out, self.params['W2'], self.params['b2'])
+    
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -106,9 +110,17 @@ class TwoLayerNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
-
+        loss, dout = softmax_loss(scores, y)
+        loss += 0.5 * self.reg * (np.sum(self.params['W1']**2) + np.sum(self.params['W2']**2))
+        
+        _, dw2, db2 = affine_backward(dout, out_cache)
+        _, dw1, db1 = affine_relu_backward(h1_out, h1_cache)
+        
+        dw1 += self.reg * self.params['W1']
+        dw2 += self.reg * self.params['W2']
+        
+        grads['W1'],grads['b1'] = dw1,db1
+        grads['W2'],grads['b2'] = dw2,db2
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
         #                             END OF YOUR CODE                             #
