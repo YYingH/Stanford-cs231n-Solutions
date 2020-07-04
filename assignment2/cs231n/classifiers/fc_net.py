@@ -49,10 +49,14 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        self.params['W1'] = (np.random.randn(input_dim * hidden_dim) * weight_scale).reshape(input_dim, hidden_dim)
-        self.params['b1'] = np.zeros((1, hidden_dim))
-        self.params['W2'] = (np.random.randn(hidden_dim * num_classes) * weight_scale).reshape(hidden_dim, num_classes)
-        self.params['b2'] = np.zeros((1, num_classes))
+#         self.params['W1'] = (np.random.randn(input_dim * hidden_dim) * weight_scale).reshape(input_dim, hidden_dim)
+        self.params['W1'] = np.random.normal(0.0, weight_scale, (input_dim, hidden_dim))
+#         self.params['b1'] = np.zeros((1, hidden_dim))
+        self.params['b1'] = np.zeros(hidden_dim)
+#         self.params['W2'] = (np.random.randn(hidden_dim * num_classes) * weight_scale).reshape(hidden_dim, num_classes)
+        self.params['W2'] = np.random.normal(0.0, weight_scale, (hidden_dim, num_classes))
+#         self.params['b2'] = np.zeros((1, num_classes))
+        self.params['b2'] = np.zeros(num_classes)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -191,7 +195,15 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        last_dim = input_dim
+        for i in range(1, self.num_layers):
+            curr_dim = hidden_dims[i-1]
+            self.params[("W" + str(i))] = np.random.normal(0.0, weight_scale, (last_dim, curr_dim))
+            self.params[("b" + str(i))] = np.zeros(curr_dim)
+            last_dim = curr_dim
+        i = self.num_layers
+        self.params[("W" + str(i))] = np.random.normal(0.0, weight_scale, (last_dim, num_classes))
+        self.params[("b" + str(i))] = np.zeros(curr_dim)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
