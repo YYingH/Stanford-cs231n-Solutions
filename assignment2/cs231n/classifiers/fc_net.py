@@ -203,7 +203,7 @@ class FullyConnectedNet(object):
             last_dim = curr_dim
         i = self.num_layers
         self.params[("W" + str(i))] = np.random.normal(0.0, weight_scale, (last_dim, num_classes))
-        self.params[("b" + str(i))] = np.zeros(curr_dim)
+        self.params[("b" + str(i))] = np.zeros(num_classes)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -277,7 +277,6 @@ class FullyConnectedNet(object):
             # Relu
             temp_out, temp_cache = relu_forward(temp_out)
             relu_cache[i] = temp_cache
-            
             last_input = temp_out
         i = self.num_layers
         scores, last_cache = affine_forward(last_input, self.params[("W" + str(i))],  self.params[("b" + str(i))])
@@ -306,8 +305,21 @@ class FullyConnectedNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        loss, dsoftmax = softmax_loss(scores, y)
+        for i in range(1, self.num_layers + 1):
+            loss += 0.5 * self.reg * np.sum(self.params["W" + str(i)] **2)
+        
+        dlast, dW, db = affine_backward(dsoftmax, last_cache)
+        grads["W" + str(self.num_layers)] = dW + self.reg * self.params["W" + str(self.num_layers)]
+        grads["b" + str(self.num_layers)] = db
+        
+        for i in range(self.num_layers - 1, 0, -1):
+            dlast = relu_backward(dlast, relu_cache[i])
+            dlast, dW, db = affine_backward(dlast, affine_cache[i])
+            grads["W" + str(i)] = dW + self.reg * self.params["W" + str(i)]
+            grads["b" + str(i)] = db
+            
+        
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
